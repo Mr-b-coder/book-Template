@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@google/genai": "^1.4.0",
-    "bwip-js": "4.3.0",
+    "bwip-js": "^4.3.0",
     "docx": "8.5.0",
     "html2canvas": "1.4.1",
     "jspdf": "^3.0.1",
@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.10",
+    "@types/bwip-js": "^3.2.3",
     "@types/node": "^22.14.0",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",

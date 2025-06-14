@@ -1,15 +1,13 @@
-
-import React, { useState, useCallback, useMemo, useRef, useEffect, ChangeEvent } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import JSZip from 'jszip';
-import { jsPDF } from 'jspdf'; 
+import { jsPDF } from 'jspdf';
 import bwipjs from 'bwip-js';
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { 
-  BookCoverFormData, CoverCalculations, DownloadFormat, BindingType, PaperStockOption,
-  // GeneratedBrandingCopy, // Commented out as Branding Hub is hidden
-} from './types'; 
-import { 
-  PAPER_STOCK_OPTIONS, 
+import {
+  BookCoverFormData, CoverCalculations, BindingType,
+} from './types.ts';
+import {
+  PAPER_STOCK_OPTIONS,
   STANDARD_BLEED_AMOUNT_INCHES,
   PERFECT_BIND_SAFETY_MARGIN_INCHES,
   CASE_BIND_WRAP_MARGIN_INCHES,
@@ -22,26 +20,23 @@ import {
   HARDCOVER_COIL_WIRE_O_BOARD_EXTENSION_INCHES,
   HARDCOVER_COIL_WIRE_O_SAFETY_TOP_BOTTOM_INCHES,
   HARDCOVER_COIL_WIRE_O_SAFETY_BINDING_EDGE_INCHES,
-  HARDCOVER_COIL_WIRE_O_SAFETY_OUTSIDE_EDGE_INCHES,
-  INCH_TO_POINTS
-} from './constants'; 
-import { generatePhotoshopScriptContent, generateInDesignScriptContent, generateInteriorIDMLCreationScript } from './components/ScriptGenerators';
-import { generateCoverPdfBlob } from './components/PdfGenerator';
-import { generateWordDocBlob } from './components/WordGenerator'; 
-import Input from './components/Input';
-import Select from './components/Select';
-import Button from './components/Button';
-import TextArea from './components/TextArea'; 
-import CheckIcon from './components/CheckIcon';
-import InteractiveInteriorSetup from './components/InteractiveInteriorSetup'; 
-import { TemplatePreview } from './components/TemplatePreview';
-import { ClipboardDocumentCheckIcon, ClipboardIcon } from './components/ClipboardIcons'; 
-import ZipFileIcon from './components/ZipFileIcon';
-import ChevronIcon from './components/ChevronIcon';
-import BarcodeIcon from './components/BarcodeIcon';
-import { useTheme, ThemeToggleButton } from './components/ThemeSwitcher'; 
-// import LightbulbIcon from './components/LightbulbIcon.tsx'; // Commented out as Branding Hub is hidden
-
+  HARDCOVER_COIL_WIRE_O_SAFETY_OUTSIDE_EDGE_INCHES
+} from './constants.ts';
+import { generatePhotoshopScriptContent, generateInDesignScriptContent, generateInteriorIDMLCreationScript } from './components/ScriptGenerators.ts';
+import { generateCoverPdfBlob } from './components/PdfGenerator.ts';
+import { generateWordDocBlob } from './components/WordGenerator.ts';
+import Input from './components/Input.tsx';
+import Select from './components/Select.tsx';
+import Button from './components/Button.tsx';
+import TextArea from './components/TextArea.tsx';
+import CheckIcon from './components/CheckIcon.tsx';
+import InteractiveInteriorSetup from './components/InteractiveInteriorSetup.tsx';
+import { TemplatePreview } from './components/TemplatePreview.tsx';
+import { ClipboardIcon } from './components/ClipboardIcons.tsx';
+import ZipFileIcon from './components/ZipFileIcon.tsx';
+import ChevronIcon from './components/ChevronIcon.tsx';
+import BarcodeIcon from './components/BarcodeIcon.tsx';
+import { ThemeToggleButton, useTheme } from './components/ThemeSwitcher.tsx'; // Corrected Path & Import
 
 // Helper function to calculate EAN-13 check digit
 const calculateEAN13CheckDigit = (isbnWithoutCheck: string): number => {
@@ -60,8 +55,8 @@ interface SummaryLine {
 // Function to generate lines for the condensed summary
 const getCondensedSummaryLines = (calculations: CoverCalculations | null): SummaryLine[] => {
     if (!calculations) return [];
-    const { 
-        bookTitle, 
+    const {
+        bookTitle,
         bindingType, trimWidthNum, trimHeightNum, pageCountNum,
         spineWidth, totalCoverWidth, totalCoverHeight
     } = calculations;
@@ -72,7 +67,7 @@ const getCondensedSummaryLines = (calculations: CoverCalculations | null): Summa
         }
         return 'N/A';
     };
-    
+
     const lines: SummaryLine[] = [];
 
     if (bookTitle) {
@@ -87,33 +82,32 @@ const getCondensedSummaryLines = (calculations: CoverCalculations | null): Summa
     if (spineWidth !== undefined && spineWidth > 0) {
       lines.push({ label: "Spine Width:", value: `${formatNumber(spineWidth)} inches` });
     }
-    
+
     return lines;
 };
 
-const AppContent: React.FC = () => {
-  const { effectiveTheme: theme } = useTheme();  // Use effectiveTheme and alias to theme
 
+const App: React.FC = () => {
   const [formData, setFormData] = useState<BookCoverFormData>({
-    bookTitle: '', 
+    bookTitle: '',
     pageCount: '',
-    paperStockPPI: PAPER_STOCK_OPTIONS[0]?.ppi.toString() || '0', 
+    paperStockPPI: PAPER_STOCK_OPTIONS[0]?.ppi.toString() || '0',
     trimWidth: '',
     trimHeight: '',
-    bindingType: '', 
+    bindingType: '',
   });
   const [calculatedDimensions, setCalculatedDimensions] = useState<CoverCalculations | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [currentProcessingFormat, setCurrentProcessingFormat] = useState<string | null>(null); 
-  
+  const [currentProcessingFormat, setCurrentProcessingFormat] = useState<string | null>(null);
+
   const [summaryCopied, setSummaryCopied] = useState(false);
   const summaryTimeoutRef = useRef<number | null>(null);
 
   const [showTechnicalGuides, setShowTechnicalGuides] = useState(true);
   const [showDownloadOptionsSet, setShowDownloadOptionsSet] = useState(false);
   const [activePreviewSection, setActivePreviewSection] = useState<'cover' | 'interior' | null>(null);
-  
+
   const [showBookSpecAndSummary, setShowBookSpecAndSummary] = useState(true);
 
 
@@ -121,7 +115,6 @@ const AppContent: React.FC = () => {
   const [showBarcodeGeneratorUI, setShowBarcodeGeneratorUI] = useState(false);
   const [selectedCustomBarcodeType, setSelectedCustomBarcodeType] = useState<'isbn' | 'datamatrix'>('isbn');
 
-  // ISBN Specific State
   const [rawIsbnInput, setRawIsbnInput] = useState('');
   const [rawPriceInput, setRawPriceInput] = useState('');
   const [displayIsbnText, setDisplayIsbnText] = useState('');
@@ -138,25 +131,16 @@ const AppContent: React.FC = () => {
   const ean5CanvasRef = useRef<HTMLCanvasElement>(null);
   const combinedScratchCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Data Matrix Specific State
   const [dataMatrixInput, setDataMatrixInput] = useState('');
   const [dataMatrixImageDataUrl, setDataMatrixImageDataUrl] = useState<string | null>(null);
   const [dataMatrixError, setDataMatrixError] = useState<string | null>(null);
   const [isDataMatrixProcessing, setIsDataMatrixProcessing] = useState(false);
-  
+
   const dataMatrixCanvasRef = useRef<HTMLCanvasElement>(null);
+  const { effectiveTheme } = useTheme();
 
-  // --- Branding Hub State (Commented out) ---
-  // const [showBrandingHubUI, setShowBrandingHubUI] = useState(false);
-  // const [bookDescriptionForBranding, setBookDescriptionForBranding] = useState('');
-  // const [generatedBrandingCopy, setGeneratedBrandingCopy] = useState<GeneratedBrandingCopy | null>(null);
-  // const [isGeneratingBrandingCopy, setIsGeneratingBrandingCopy] = useState(false);
-  // const [brandingCopyError, setBrandingCopyError] = useState<string | null>(null);
-  // const [copiedBrandingItem, setCopiedBrandingItem] = useState<string | null>(null);
-  // const brandingCopyTimeoutRef = useRef<number | null>(null);
-
-  const isPageDetailsRequired = useCallback((bindingType: BindingType | '') => { 
-    if (!bindingType) return false; 
+  const isPageDetailsRequired = useCallback((bindingType: BindingType | '') => {
+    if (!bindingType) return false;
     return bindingType === BindingType.PERFECT_BIND || bindingType === BindingType.CASE_BIND;
   }, []);
 
@@ -165,18 +149,18 @@ const AppContent: React.FC = () => {
 
   const handleTemplateFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setError(null); 
+    setError(null);
     setCalculatedDimensions(null);
     setActivePreviewSection(null);
     setShowDownloadOptionsSet(false);
 
     if (name === "bindingType") {
-      const newBindingType = value as BindingType | ''; 
+      const newBindingType = value as BindingType | '';
       if (newBindingType === '' || !isPageDetailsRequired(newBindingType)) {
         setFormData(prev => ({
           ...prev,
-          pageCount: '', 
-          paperStockPPI: PAPER_STOCK_OPTIONS[0]?.ppi.toString() || '0', 
+          pageCount: '',
+          paperStockPPI: PAPER_STOCK_OPTIONS[0]?.ppi.toString() || '0',
           bindingType: newBindingType
         }));
       } else {
@@ -186,10 +170,10 @@ const AppContent: React.FC = () => {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
-  
+
   const handleRawIsbnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setRawIsbnInput(e.target.value);
-    setIsbnBarcodeError(null); 
+    setIsbnBarcodeError(null);
   };
 
   const handleRawPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -201,11 +185,11 @@ const AppContent: React.FC = () => {
     setDataMatrixError(null);
   };
 
-  const formatISBNForAltext = (isbn: string): string => { 
+  const formatISBNForAltext = (isbn: string): string => {
     if (isbn.length === 13 && !isbn.includes('-')) {
-        const pattern1 = /(\d{3})(\d{1})(\d{3})(\d{5})(\d{1})/; 
-        const pattern2 = /(\d{3})(\d{2})(\d{2})(\d{5})(\d{1})/; 
-        const pattern3 = /(\d{3})(\d{1})(\d{4})(\d{4})(\d{1})/; 
+        const pattern1 = /(\d{3})(\d{1})(\d{3})(\d{5})(\d{1})/;
+        const pattern2 = /(\d{3})(\d{2})(\d{2})(\d{5})(\d{1})/;
+        const pattern3 = /(\d{3})(\d{1})(\d{4})(\d{4})(\d{1})/;
         if (pattern1.test(isbn)) return `ISBN ${isbn.replace(pattern1, '$1-$2-$3-$4-$5')}`;
         if (pattern2.test(isbn)) return `ISBN ${isbn.replace(pattern2, '$1-$2-$3-$4-$5')}`;
         if (pattern3.test(isbn)) return `ISBN ${isbn.replace(pattern3, '$1-$2-$3-$4-$5')}`;
@@ -213,11 +197,11 @@ const AppContent: React.FC = () => {
     return isbn.startsWith('ISBN ') ? isbn : `ISBN ${isbn}`;
   };
 
-  useEffect(() => { 
+  useEffect(() => {
     const originalInput = rawIsbnInput;
     const cleaned = rawIsbnInput.replace(/[-\s]/g, '');
     setIsbnBarcodeError(null);
-    setEan13ImageDataUrl(null); 
+    setEan13ImageDataUrl(null);
 
     if (!cleaned) {
       setEan13Data(null);
@@ -226,10 +210,10 @@ const AppContent: React.FC = () => {
     }
 
     let finalEan13 = '';
-    let displayIsbnForText = originalInput.trim(); 
+    let displayIsbnForText = originalInput.trim();
 
     if (cleaned.length === 10) {
-      if (!/^\d{9}[\dX]$/i.test(cleaned)) { 
+      if (!/^\d{9}[\dX]$/i.test(cleaned)) {
         setIsbnBarcodeError('Invalid ISBN-10 format.');
         setEan13Data(null);
         return;
@@ -244,7 +228,7 @@ const AppContent: React.FC = () => {
       const p5 = finalEan13.substring(12,13);
       displayIsbnForText = `${p1}-${p2}-${p3}-${p4}-${p5}`;
     } else if (cleaned.length === 13) {
-      if (!/^\d{13}$/.test(cleaned)) { 
+      if (!/^\d{13}$/.test(cleaned)) {
         setIsbnBarcodeError('Invalid ISBN-13 characters.');
         setEan13Data(null);
         return;
@@ -256,15 +240,15 @@ const AppContent: React.FC = () => {
         return;
       }
       finalEan13 = cleaned;
-      if (!originalInput.includes('-')) { 
+      if (!originalInput.includes('-')) {
         const p1 = finalEan13.substring(0,3);
-        const p2 = finalEan13.substring(3,4); 
+        const p2 = finalEan13.substring(3,4);
         const p3 = finalEan13.substring(4,7);
         const p4 = finalEan13.substring(7,12);
         const p5 = finalEan13.substring(12,13);
         displayIsbnForText = `${p1}-${p2}-${p3}-${p4}-${p5}`;
       } else {
-        displayIsbnForText = originalInput; 
+        displayIsbnForText = originalInput;
       }
     } else {
       setIsbnBarcodeError('ISBN must be 10 or 13 digits.');
@@ -278,18 +262,18 @@ const AppContent: React.FC = () => {
 
     if (finalEan13 && ean13CanvasRef.current) {
       const canvas = ean13CanvasRef.current;
-      canvas.width = 800; 
-      canvas.height = 600; 
+      canvas.width = 800;
+      canvas.height = 600;
       try {
         const bwipjsOptions: any = {
           bcid: 'ean13',
           text: finalEan13,
           scale: 4,
-          height: 20, 
-          includetext: true, 
+          height: 20,
+          includetext: true,
           textxalign: 'center',
         };
-        
+
         bwipjs.toCanvas(canvas, bwipjsOptions);
         setEan13ImageDataUrl(canvas.toDataURL('image/png'));
       } catch (e) {
@@ -300,35 +284,35 @@ const AppContent: React.FC = () => {
     }
   }, [rawIsbnInput]);
 
-  useEffect(() => { 
+  useEffect(() => {
     setEan5ImageDataUrl(null);
 
     const priceNum = parseFloat(rawPriceInput);
     let currentEan5Data = '';
 
     if (rawPriceInput.trim() === '' || isNaN(priceNum) || priceNum < 0) {
-      currentEan5Data = '90000'; 
-      setDisplayPriceText('$0.00 >'); 
+      currentEan5Data = '90000';
+      setDisplayPriceText('$0.00 >');
     } else if (priceNum > 99.99) {
-      currentEan5Data = '59999'; 
-      setDisplayPriceText('NPI >'); 
+      currentEan5Data = '59999';
+      setDisplayPriceText('NPI >');
     } else {
       const cents = Math.round(priceNum * 100);
       currentEan5Data = '5' + cents.toString().padStart(4, '0');
       setDisplayPriceText(`$${priceNum.toFixed(2)} >`);
     }
 
-    if (currentEan5Data && ean5CanvasRef.current && ean13Data && rawPriceInput.trim() !== '') { 
+    if (currentEan5Data && ean5CanvasRef.current && ean13Data && rawPriceInput.trim() !== '') {
       const canvas = ean5CanvasRef.current;
-      canvas.width = 400; 
-      canvas.height = 600; 
+      canvas.width = 400;
+      canvas.height = 600;
       try {
         const ean5Options: any = {
             bcid: 'ean5',
             text: currentEan5Data,
             scale: 4,
-            height: 20, 
-            includetext: false, 
+            height: 20,
+            includetext: false,
             textxalign: 'center',
         };
 
@@ -339,10 +323,10 @@ const AppContent: React.FC = () => {
         console.error("EAN-5 generation error:", e);
         setEan5ImageDataUrl(null);
       }
-    } else { 
-        setEan5ImageDataUrl(null); 
+    } else {
+        setEan5ImageDataUrl(null);
     }
-  }, [rawPriceInput, ean13Data]); 
+  }, [rawPriceInput, ean13Data]);
 
   useEffect(() => {
     const generateCombinedPreview = async () => {
@@ -369,7 +353,7 @@ const AppContent: React.FC = () => {
             ean13Image.onerror = () => reject(new Error("Failed to load EAN-13 image for preview."));
             ean13Image.src = ean13ImageDataUrl;
         }));
-        
+
         const showPriceArea = rawPriceInput.trim() !== '' && ean5ImageDataUrl && displayPriceText;
         if (showPriceArea) {
             imageLoadPromises.push(new Promise<void>((resolve, reject) => {
@@ -381,7 +365,7 @@ const AppContent: React.FC = () => {
 
         try {
             await Promise.all(imageLoadPromises);
-            if (!ean13Loaded) { 
+            if (!ean13Loaded) {
                 setCombinedIsbnPricePreviewUrl(null);
                 return;
             }
@@ -395,29 +379,29 @@ const AppContent: React.FC = () => {
             ctx.font = PREVIEW_TEXT_FONT;
             const isbnTextMetrics = ctx.measureText(displayIsbnText);
             const priceTextMetrics = showPriceArea ? ctx.measureText(displayPriceText!) : { width: 0 };
-            
+
             const isbnSectionWidth = Math.max(isbnTextMetrics.width, ean13Image.naturalWidth);
             const priceSectionWidth = showPriceArea ? Math.max(priceTextMetrics.width, ean5Image.naturalWidth) : 0;
-            
+
             const totalTextHeight = PREVIEW_FONT_SIZE_PX;
             const maxImageHeight = Math.max(ean13Image.naturalHeight, showPriceArea && ean5Loaded ? ean5Image.naturalHeight : 0);
 
             canvas.width = PREVIEW_PADDING * 2 + isbnSectionWidth + (showPriceArea ? PREVIEW_SECTION_GAP + priceSectionWidth : 0);
             canvas.height = PREVIEW_PADDING * 2 + totalTextHeight + PREVIEW_TEXT_IMAGE_GAP + maxImageHeight;
-            
-            ctx.fillStyle = '#FFFFFF'; 
+
+            ctx.fillStyle = '#FFFFFF';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#000000'; 
-            
-            ctx.font = PREVIEW_TEXT_FONT; 
+            ctx.fillStyle = '#000000';
+
+            ctx.font = PREVIEW_TEXT_FONT;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
             const isbnTextX = PREVIEW_PADDING + isbnSectionWidth / 2;
-            const textY = PREVIEW_PADDING + totalTextHeight / 2; 
+            const textY = PREVIEW_PADDING + totalTextHeight / 2;
             ctx.fillText(displayIsbnText, isbnTextX, textY);
             ctx.drawImage(ean13Image, PREVIEW_PADDING + (isbnSectionWidth - ean13Image.naturalWidth) / 2, PREVIEW_PADDING + totalTextHeight + PREVIEW_TEXT_IMAGE_GAP);
-            
+
             if (showPriceArea && ean5Loaded) {
                 const priceTextX = PREVIEW_PADDING + isbnSectionWidth + PREVIEW_SECTION_GAP + priceSectionWidth / 2;
                 ctx.fillText(displayPriceText!, priceTextX, textY);
@@ -434,7 +418,7 @@ const AppContent: React.FC = () => {
   }, [displayIsbnText, ean13ImageDataUrl, rawPriceInput, displayPriceText, ean5ImageDataUrl, ean13Data]);
 
 
-  useEffect(() => { 
+  useEffect(() => {
     setDataMatrixError(null);
     setDataMatrixImageDataUrl(null);
 
@@ -444,16 +428,16 @@ const AppContent: React.FC = () => {
 
     if (dataMatrixCanvasRef.current) {
         const canvas = dataMatrixCanvasRef.current;
-        canvas.width = 300; 
-        canvas.height = 300; 
+        canvas.width = 300;
+        canvas.height = 300;
         try {
             bwipjs.toCanvas(canvas, {
                 bcid: 'datamatrix',
                 text: dataMatrixInput,
-                scale: 5,         
-                width: 25,        
+                scale: 5,
+                width: 25,
                 height: 25,
-                backgroundcolor: "FFFFFF", 
+                backgroundcolor: "FFFFFF",
             });
             setDataMatrixImageDataUrl(canvas.toDataURL('image/png'));
         } catch (e) {
@@ -466,7 +450,7 @@ const AppContent: React.FC = () => {
 
   const calculateCoverDimensions = useCallback(() => {
     setError(null);
-    if (!formData.bindingType) { 
+    if (!formData.bindingType) {
       setError("Please select a binding type.");
       return null;
     }
@@ -484,7 +468,7 @@ const AppContent: React.FC = () => {
             setError("Page count must be a positive number for this binding type.");
             return null;
         }
-        if (ppiNum <= 0) { 
+        if (ppiNum <= 0) {
             setError("Please select a valid paper stock for this binding type.");
             return null;
         }
@@ -493,10 +477,10 @@ const AppContent: React.FC = () => {
     let calculations: CoverCalculations = {
       bookTitle: formData.bookTitle?.trim() || undefined,
       pageCountNum: !isNaN(pageCountNum) && pageCountNum > 0 ? pageCountNum : undefined,
-      ppiNum: !isNaN(ppiNum) && ppiNum > 0 ? ppiNum : undefined, 
+      ppiNum: !isNaN(ppiNum) && ppiNum > 0 ? ppiNum : undefined,
       trimWidthNum,
       trimHeightNum,
-      bindingType: formData.bindingType as BindingType, 
+      bindingType: formData.bindingType as BindingType,
       totalCoverWidth: 0,
       totalCoverHeight: 0,
     };
@@ -509,38 +493,38 @@ const AppContent: React.FC = () => {
       calculations.totalCoverHeight = trimHeightNum + (STANDARD_BLEED_AMOUNT_INCHES * 2);
       calculations.safetyMargin = PERFECT_BIND_SAFETY_MARGIN_INCHES;
     } else if (formData.bindingType === BindingType.CASE_BIND) {
-      const spineWidth = (pageCountNum / ppiNum); 
+      const spineWidth = (pageCountNum / ppiNum);
       calculations.spineWidth = spineWidth;
       calculations.wrapAmount = CASE_BIND_WRAP_MARGIN_INCHES;
       calculations.hingeWidth = CASE_BIND_HINGE_WIDTH_INCHES;
-      
-      const frontPanelBoardWidth = trimWidthNum; 
+
+      const frontPanelBoardWidth = trimWidthNum;
       calculations.frontPanelBoardWidth = frontPanelBoardWidth;
-      calculations.boardWidth = (frontPanelBoardWidth * 2) + spineWidth + (CASE_BIND_HINGE_WIDTH_INCHES * 2); 
-      calculations.boardHeight = trimHeightNum; 
+      calculations.boardWidth = (frontPanelBoardWidth * 2) + spineWidth + (CASE_BIND_HINGE_WIDTH_INCHES * 2);
+      calculations.boardHeight = trimHeightNum;
 
       calculations.totalCoverWidth = calculations.boardWidth + (CASE_BIND_WRAP_MARGIN_INCHES * 2);
       calculations.totalCoverHeight = calculations.boardHeight + (CASE_BIND_WRAP_MARGIN_INCHES * 2);
-      calculations.safetyMargin = CASE_BIND_SAFETY_MARGIN_INCHES; 
+      calculations.safetyMargin = CASE_BIND_SAFETY_MARGIN_INCHES;
     } else if (formData.bindingType === BindingType.COIL_WIRE_O_SOFTCOVER) {
         calculations.bleedAmount = STANDARD_BLEED_AMOUNT_INCHES;
         calculations.totalCoverWidth = trimWidthNum + (STANDARD_BLEED_AMOUNT_INCHES * 2);
         calculations.totalCoverHeight = trimHeightNum + (STANDARD_BLEED_AMOUNT_INCHES * 2);
-        calculations.spineWidth = 0; 
+        calculations.spineWidth = 0;
         calculations.safetyMarginTopBottom = COIL_WIRE_O_SAFETY_MARGIN_TOP_BOTTOM_INCHES;
         calculations.safetyMarginBindingEdge = COIL_WIRE_O_SAFETY_MARGIN_BINDING_EDGE_INCHES;
         calculations.safetyMarginOutsideEdge = COIL_WIRE_O_SAFETY_MARGIN_OUTSIDE_EDGE_INCHES;
     } else if (formData.bindingType === BindingType.COIL_WIRE_O_HARDCOVER) {
         calculations.wrapAmount = HARDCOVER_COIL_WIRE_O_WRAP_AMOUNT_INCHES;
-        calculations.boardExtension = HARDCOVER_COIL_WIRE_O_BOARD_EXTENSION_INCHES; 
-        
-        calculations.boardHeight = trimHeightNum + calculations.boardExtension; 
+        calculations.boardExtension = HARDCOVER_COIL_WIRE_O_BOARD_EXTENSION_INCHES;
+
+        calculations.boardHeight = trimHeightNum + calculations.boardExtension;
         calculations.totalCoverWidth = (trimWidthNum + calculations.boardExtension) + (calculations.wrapAmount * 2);
         calculations.totalCoverHeight = calculations.boardHeight + (calculations.wrapAmount * 2);
-        calculations.spineWidth = 0; 
-        calculations.safetyMarginTopBottom = HARDCOVER_COIL_WIRE_O_SAFETY_TOP_BOTTOM_INCHES; 
-        calculations.safetyMarginBindingEdge = HARDCOVER_COIL_WIRE_O_SAFETY_BINDING_EDGE_INCHES; 
-        calculations.safetyMarginOutsideEdge = HARDCOVER_COIL_WIRE_O_SAFETY_OUTSIDE_EDGE_INCHES; 
+        calculations.spineWidth = 0;
+        calculations.safetyMarginTopBottom = HARDCOVER_COIL_WIRE_O_SAFETY_TOP_BOTTOM_INCHES;
+        calculations.safetyMarginBindingEdge = HARDCOVER_COIL_WIRE_O_SAFETY_BINDING_EDGE_INCHES;
+        calculations.safetyMarginOutsideEdge = HARDCOVER_COIL_WIRE_O_SAFETY_OUTSIDE_EDGE_INCHES;
     }
     return calculations;
   }, [formData, isPageDetailsRequired]);
@@ -549,15 +533,15 @@ const AppContent: React.FC = () => {
     e.preventDefault();
     const dimensions = calculateCoverDimensions();
     setCalculatedDimensions(dimensions);
-    setShowDownloadOptionsSet(!!dimensions); 
+    setShowDownloadOptionsSet(!!dimensions);
     if (dimensions) {
-        setActivePreviewSection('cover'); 
-        setShowBookSpecAndSummary(true); 
+        setActivePreviewSection('cover');
+        setShowBookSpecAndSummary(true);
     } else {
         setActivePreviewSection(null);
     }
   };
-  
+
   const getBaseFileName = (dimensions: CoverCalculations): string => {
     const titlePart = dimensions.bookTitle ? `${dimensions.bookTitle.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_')}_` : '';
     const trimSizeForFilename = `${dimensions.trimWidthNum.toFixed(2)}x${dimensions.trimHeightNum.toFixed(2)}`;
@@ -579,10 +563,10 @@ const AppContent: React.FC = () => {
 
       const psScriptContent = generatePhotoshopScriptContent(calculatedDimensions);
       zip.file(`${baseFileName}_PhotoshopScript.jsx`, psScriptContent);
-      
+
       const idScriptContent = generateInDesignScriptContent(calculatedDimensions);
       zip.file(`${baseFileName}_InDesignScript.jsx`, idScriptContent);
-      
+
       const zipBlob = await zip.generateAsync({ type: "blob" });
       triggerDownload(zipBlob, "Cover_Files.zip");
 
@@ -605,7 +589,7 @@ const AppContent: React.FC = () => {
 
       const wordDocBlob = await generateWordDocBlob(trimWidthNum, trimHeightNum);
       zip.file("Interior_Template.docx", wordDocBlob);
-      
+
       const gutterSpec = [
         { range: [0, 60], margin: 0.5 }, { range: [61, 150], margin: 0.75 },
         { range: [151, 400], margin: 1.0 }, { range: [401, 600], margin: 1.125 },
@@ -616,7 +600,7 @@ const AppContent: React.FC = () => {
 
       const idmlCreationScript = generateInteriorIDMLCreationScript(trimWidthNum, trimHeightNum, gutter);
       zip.file("Create_Interior_IDML_Template.jsx", idmlCreationScript);
-      
+
       const zipBlob = await zip.generateAsync({ type: "blob" });
       triggerDownload(zipBlob, "Interior_Files.zip");
 
@@ -644,16 +628,16 @@ const AppContent: React.FC = () => {
       coverFolder!.file(`${baseFileName}_Template.pdf`, pdfBlob);
       const psScriptContent = generatePhotoshopScriptContent(calculatedDimensions);
       coverFolder!.file(`${baseFileName}_PhotoshopScript.jsx`, psScriptContent);
-      
+
       const idScriptContent = generateInDesignScriptContent(calculatedDimensions);
       coverFolder!.file(`${baseFileName}_InDesignScript.jsx`, idScriptContent);
-      
+
 
       // Interior Files
       const { trimWidthNum, trimHeightNum, pageCountNum } = calculatedDimensions;
       const wordDocBlob = await generateWordDocBlob(trimWidthNum, trimHeightNum);
       interiorFolder!.file("Interior_Template.docx", wordDocBlob);
-      
+
       const gutterSpec = [
         { range: [0, 60], margin: 0.5 }, { range: [61, 150], margin: 0.75 },
         { range: [151, 400], margin: 1.0 }, { range: [401, 600], margin: 1.125 },
@@ -664,7 +648,7 @@ const AppContent: React.FC = () => {
 
       const idmlCreationScript = generateInteriorIDMLCreationScript(trimWidthNum, trimHeightNum, gutter);
       interiorFolder!.file("Create_Interior_IDML_Template.jsx", idmlCreationScript);
-      
+
       const zipBlob = await mainZip.generateAsync({ type: "blob" });
       triggerDownload(zipBlob, `${baseFileName}_ALL_FILES.zip`);
 
@@ -676,7 +660,7 @@ const AppContent: React.FC = () => {
       setCurrentProcessingFormat(null);
     }
   };
-  
+
   const triggerDownload = (blob: Blob, fileName: string) => {
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
@@ -686,7 +670,7 @@ const AppContent: React.FC = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(link.href);
   };
-  
+
   const summaryForClipboard = (): string => {
     return getCondensedSummaryLines(calculatedDimensions).map(line => `${line.label} ${line.value}`).join('\n');
   };
@@ -713,11 +697,11 @@ const AppContent: React.FC = () => {
         setIsbnBarcodeError("No valid ISBN barcode data to download.");
         return;
     }
-    
+
     const isPriceEntered = rawPriceInput.trim() !== '';
     const isPriceValidForAddon = isPriceEntered && parseFloat(rawPriceInput) >= 0;
 
-    if (isPriceValidForAddon && !ean5ImageDataUrl) { 
+    if (isPriceValidForAddon && !ean5ImageDataUrl) {
         setIsbnBarcodeError("Price barcode image not yet rendered or failed.");
         return;
     }
@@ -734,16 +718,16 @@ const AppContent: React.FC = () => {
         imageLoadPromises.push(new Promise<void>((resolve, reject) => {
             ean13Image.onload = () => resolve();
             ean13Image.onerror = () => reject(new Error("Failed to load EAN-13 image."));
-            ean13Image.src = ean13ImageDataUrl; 
+            ean13Image.src = ean13ImageDataUrl;
         }));
 
         let ean5ActuallyUsed = false;
-        if (isPriceValidForAddon && ean5ImageDataUrl) { 
+        if (isPriceValidForAddon && ean5ImageDataUrl) {
             ean5ActuallyUsed = true;
             imageLoadPromises.push(new Promise<void>((resolve, reject) => {
                 ean5Image.onload = () => resolve();
                 ean5Image.onerror = () => reject(new Error("Failed to load EAN-5 image."));
-                ean5Image.src = ean5ImageDataUrl!; 
+                ean5Image.src = ean5ImageDataUrl!;
             }));
         }
 
@@ -755,53 +739,53 @@ const AppContent: React.FC = () => {
             throw new Error("Could not get canvas context for download.");
         }
 
-        const FONT_SIZE_PX = 30; 
+        const FONT_SIZE_PX = 30;
         const TEXT_FONT = `bold ${FONT_SIZE_PX}px 'Courier New', Courier, monospace`;
-        const PADDING = 20; 
-        const SECTION_GAP = ean5ActuallyUsed ? 20 : 0; 
-        const TEXT_IMAGE_GAP = 10; 
+        const PADDING = 20;
+        const SECTION_GAP = ean5ActuallyUsed ? 20 : 0;
+        const TEXT_IMAGE_GAP = 10;
 
         ctx.font = TEXT_FONT;
         const isbnTextMetrics = ctx.measureText(displayIsbnText);
-        const priceTextMetrics = ean5ActuallyUsed ? ctx.measureText(displayPriceText) : { width: 0, actualBoundingBoxAscent: 0, actualBoundingBoxDescent: 0 };
-        
+        const priceTextMetrics = ean5ActuallyUsed ? ctx.measureText(displayPriceText) : { width: 0 };
+
         const isbnSectionWidth = Math.max(isbnTextMetrics.width, ean13Image.naturalWidth);
         const priceSectionWidth = ean5ActuallyUsed ? Math.max(priceTextMetrics.width, ean5Image.naturalWidth) : 0;
-        
-        const totalTextHeight = FONT_SIZE_PX; 
+
+        const totalTextHeight = FONT_SIZE_PX;
         const maxImageHeight = Math.max(ean13Image.naturalHeight, ean5ActuallyUsed ? ean5Image.naturalHeight : 0);
 
         tempCanvas.width = PADDING * 2 + isbnSectionWidth + (ean5ActuallyUsed ? SECTION_GAP + priceSectionWidth : 0);
         tempCanvas.height = PADDING * 2 + totalTextHeight + TEXT_IMAGE_GAP + maxImageHeight;
-        
-        ctx.font = TEXT_FONT; 
-        ctx.fillStyle = theme === 'dark' ? '#1E293B' : '#FFFFFF'; // Background from theme context
+
+        ctx.font = TEXT_FONT;
+        ctx.fillStyle = effectiveTheme === 'dark' ? '#1E293B' : '#FFFFFF';
         ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-        ctx.fillStyle = theme === 'dark' ? '#F1F5F9' : '#0A2F5C'; // Text from theme context
+        ctx.fillStyle = effectiveTheme === 'dark' ? '#F1F5F9' : '#0A2F5C';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         const isbnTextX = PADDING + isbnSectionWidth / 2;
-        const textY = PADDING + totalTextHeight / 2; 
+        const textY = PADDING + totalTextHeight / 2;
         ctx.fillText(displayIsbnText, isbnTextX, textY);
-        
-        if (theme === 'dark') ctx.filter = 'invert(1)';
+
+        if (effectiveTheme === 'dark') ctx.filter = 'invert(1)';
         ctx.drawImage(ean13Image, PADDING + (isbnSectionWidth - ean13Image.naturalWidth) / 2, PADDING + totalTextHeight + TEXT_IMAGE_GAP);
         if (ean5ActuallyUsed) {
             ctx.drawImage(ean5Image, PADDING + isbnSectionWidth + SECTION_GAP + (priceSectionWidth - ean5Image.naturalWidth) / 2, PADDING + totalTextHeight + TEXT_IMAGE_GAP);
         }
-        if (theme === 'dark') ctx.filter = 'none'; 
-        
+        if (effectiveTheme === 'dark') ctx.filter = 'none';
+
         const fileNameBase = `barcode-${ean13Data}`;
 
         if (format === 'JPEG') {
-            const dataUrl = tempCanvas.toDataURL('image/jpeg', 1.0); 
+            const dataUrl = tempCanvas.toDataURL('image/jpeg', 1.0);
             const link = document.createElement('a');
             link.href = dataUrl;
             link.download = `${fileNameBase}.jpeg`;
             link.click();
         } else if (format === 'PDF') {
-            const imgData = tempCanvas.toDataURL('image/png'); 
+            const imgData = tempCanvas.toDataURL('image/png');
             const pdf = new jsPDF({
                 orientation: tempCanvas.width > tempCanvas.height ? 'l' : 'p',
                 unit: 'pt',
@@ -818,10 +802,10 @@ const AppContent: React.FC = () => {
         setIsIsbnBarcodeProcessing(false);
         setCurrentProcessingFormat(null);
     }
-};
+  };
 
   const handleDownloadDataMatrixBarcode = async (format: 'JPEG' | 'PDF') => {
-    if (!dataMatrixImageDataUrl || !dataMatrixInput.trim()) { 
+    if (!dataMatrixImageDataUrl || !dataMatrixInput.trim()) {
         setDataMatrixError("No valid Data Matrix barcode data to download.");
         return;
     }
@@ -834,46 +818,46 @@ const AppContent: React.FC = () => {
         await new Promise<void>((resolve, reject) => {
             dataMatrixImage.onload = () => resolve();
             dataMatrixImage.onerror = () => reject(new Error("Failed to load Data Matrix image for download."));
-            dataMatrixImage.src = dataMatrixImageDataUrl; 
+            dataMatrixImage.src = dataMatrixImageDataUrl;
         });
 
         const tempCanvas = document.createElement('canvas');
         const ctx = tempCanvas.getContext('2d');
         if (!ctx) throw new Error("Could not get canvas context for Data Matrix download.");
 
-        const FONT_SIZE_PX_DM = 48; 
+        const FONT_SIZE_PX_DM = 48;
         const TEXT_FONT_DM = `${FONT_SIZE_PX_DM}px 'Courier New', Courier, monospace`;
         const PADDING_DM = 20;
         const TEXT_IMAGE_GAP_DM = 15;
 
         ctx.font = TEXT_FONT_DM;
         const textMetrics = ctx.measureText(dataMatrixInput);
-        const approxTextHeight = FONT_SIZE_PX_DM * 1.2; 
+        const approxTextHeight = FONT_SIZE_PX_DM * 1.2;
 
         tempCanvas.width = PADDING_DM * 2 + Math.max(dataMatrixImage.naturalWidth, textMetrics.width);
         tempCanvas.height = PADDING_DM * 2 + dataMatrixImage.naturalHeight + TEXT_IMAGE_GAP_DM + approxTextHeight;
-        
-        ctx.fillStyle = theme === 'dark' ? '#1E293B' : '#FFFFFF'; // Themed background
+
+        ctx.fillStyle = effectiveTheme === 'dark' ? '#1E293B' : '#FFFFFF';
         ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-        
+
         ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle'; 
+        ctx.textBaseline = 'middle';
 
         const imageX = (tempCanvas.width - dataMatrixImage.naturalWidth) / 2;
         const imageY = PADDING_DM;
 
-        if (theme === 'dark') {
+        if (effectiveTheme === 'dark') {
             ctx.filter = 'invert(1)';
         }
         ctx.drawImage(dataMatrixImage, imageX, imageY);
-        if (theme === 'dark') {
-            ctx.filter = 'none'; 
+        if (effectiveTheme === 'dark') {
+            ctx.filter = 'none';
         }
 
         ctx.font = TEXT_FONT_DM;
-        ctx.fillStyle = theme === 'dark' ? '#F1F5F9' : '#0A2F5C'; // Themed text
+        ctx.fillStyle = effectiveTheme === 'dark' ? '#F1F5F9' : '#0A2F5C';
         const textX = tempCanvas.width / 2;
-        const textY = imageY + dataMatrixImage.naturalHeight + TEXT_IMAGE_GAP_DM + approxTextHeight / 2; 
+        const textY = imageY + dataMatrixImage.naturalHeight + TEXT_IMAGE_GAP_DM + approxTextHeight / 2;
         ctx.fillText(dataMatrixInput, textX, textY);
 
         const safeFilenamePart = dataMatrixInput.substring(0, 20).replace(/[^a-zA-Z0-9]/g, '_');
@@ -886,7 +870,7 @@ const AppContent: React.FC = () => {
             link.download = `${fileNameBase}.jpeg`;
             link.click();
         } else if (format === 'PDF') {
-            const imgData = tempCanvas.toDataURL('image/png'); 
+            const imgData = tempCanvas.toDataURL('image/png');
             const pdf = new jsPDF({
                 orientation: tempCanvas.width > tempCanvas.height ? 'l' : 'p',
                 unit: 'pt',
@@ -905,39 +889,30 @@ const AppContent: React.FC = () => {
     }
   };
 
-  // --- Branding Hub Functions (Commented out) ---
-  /*
-  const handleGenerateBrandingCopy = async () => { ... };
-  const copyBrandingItemToClipboard = (itemKey: string, textToCopy: string) => { ... };
-  */
-
   useEffect(() => {
     return () => {
       if (summaryTimeoutRef.current) {
         clearTimeout(summaryTimeoutRef.current);
       }
-      // if (brandingCopyTimeoutRef.current) { // Commented out
-      //   clearTimeout(brandingCopyTimeoutRef.current);
-      // }
     };
   }, []);
 
   const paperStockOptionsForSelect = PAPER_STOCK_OPTIONS.map(opt => ({ value: opt.ppi.toString(), label: opt.name }));
   const bindingTypeOptionsForSelect = [
-    { value: '', label: "Select Binding Type" }, 
+    { value: '', label: "Select Binding Type" },
     ...Object.values(BindingType).map(bt => ({ value: bt, label: bt }))
   ];
-  
+
   const condensedSummaryLines = useMemo(() => getCondensedSummaryLines(calculatedDimensions), [calculatedDimensions]);
 
   const legendColorMapping = {
-    bleed: '#FF6B6B', 
-    wrap: '#FF6B6B',   
-    trim: '#4A90E2',   
-    safety: '#22C55E', 
-    spine: '#9013FE',  
-    hinge: '#F5A623',  
-    board: '#444444',  
+    bleed: '#FF6B6B',
+    wrap: '#FF6B6B',
+    trim: '#4A90E2',
+    safety: '#22C55E',
+    spine: '#9013FE',
+    hinge: '#F5A623',
+    board: '#444444',
   };
 
   const currentLegendItems = useMemo(() => {
@@ -972,6 +947,7 @@ const AppContent: React.FC = () => {
     setActivePreviewSection(prev => (prev === section ? null : section));
   };
 
+
   return (
     <div className="container mx-auto p-4 md:p-6 lg:p-8 flex flex-col min-h-screen text-[#0A2F5C] dark:text-[#F1F5F9]">
       <header className="mb-6 md:mb-8">
@@ -983,23 +959,14 @@ const AppContent: React.FC = () => {
           </div>
         </div>
       </header>
-      
+
       <canvas ref={ean13CanvasRef} style={{ display: 'none' }}></canvas>
       <canvas ref={ean5CanvasRef} style={{ display: 'none' }}></canvas>
       <canvas ref={dataMatrixCanvasRef} style={{ display: 'none' }}></canvas>
       <canvas ref={combinedScratchCanvasRef} style={{ display: 'none' }}></canvas>
 
-
       <div className="grid lg:grid-cols-12 gap-8 items-start flex-grow">
         <div className="lg:col-span-4 space-y-8">
-            {/* === BRANDING & MARKETING HUB CARD (Commented out) === */}
-            {/*
-            <div className="bg-[#FFFFFF] dark:bg-[#1E293B] p-0 shadow-lg rounded-lg border border-[#DDE3ED] dark:border-[#334155]" aria-labelledby="branding-hub-heading">
-                ... content ...
-            </div>
-            */}
-
-            {/* === BARCODE GENERATOR CARD (Always Visible) === */}
             <div className="bg-[#FFFFFF] dark:bg-[#1E293B] p-0 shadow-lg rounded-lg border border-[#DDE3ED] dark:border-[#334155]" aria-labelledby="barcode-generator-heading">
                 <button
                     onClick={() => setShowBarcodeGeneratorUI(!showBarcodeGeneratorUI)}
@@ -1009,7 +976,7 @@ const AppContent: React.FC = () => {
                 >
                     <div className="flex items-center space-x-2">
                         <BarcodeIcon className="text-[#0A2F5C] dark:text-[#13B5CF]" />
-                        <h2 id="barcode-generator-heading" className="text-xl font-semibold text-[#0A2F5C] dark:text-[#F1F5F9]"> 
+                        <h2 id="barcode-generator-heading" className="text-xl font-semibold text-[#0A2F5C] dark:text-[#F1F5F9]">
                             Generate Barcode Image
                         </h2>
                     </div>
@@ -1018,14 +985,14 @@ const AppContent: React.FC = () => {
                 {showBarcodeGeneratorUI && (
                     <div id="barcode-generator-content" className="p-6 bg-[#FFFFFF] dark:bg-[#1E293B] rounded-b-lg border-t border-[#DDE3ED] dark:border-[#334155]">
                         <div className="mb-6 flex space-x-1 border-b border-[#DDE3ED] dark:border-[#334155]">
-                            <Button 
+                            <Button
                                 variant={selectedCustomBarcodeType === 'isbn' ? 'primary' : 'outline'}
                                 onClick={() => setSelectedCustomBarcodeType('isbn')}
                                 className={`flex-1 rounded-b-none py-2 px-3 text-sm sm:text-base ${selectedCustomBarcodeType === 'isbn' ? 'border-b-transparent -mb-px !bg-[#0A2F5C] dark:!bg-[#13B5CF] !text-white dark:!text-[#0F172A]' : 'border-transparent text-[#4A5E78] dark:text-[#94A3B8] hover:text-[#0A2F5C] dark:hover:text-[#F1F5F9] hover:border-[#8DA0B9] dark:hover:border-[#64748B]'}`}
                             >
                                 ISBN Barcode
                             </Button>
-                            <Button 
+                            <Button
                                 variant={selectedCustomBarcodeType === 'datamatrix' ? 'primary' : 'outline'}
                                 onClick={() => setSelectedCustomBarcodeType('datamatrix')}
                                 className={`flex-1 rounded-b-none py-2 px-3 text-sm sm:text-base ${selectedCustomBarcodeType === 'datamatrix' ? 'border-b-transparent -mb-px !bg-[#0A2F5C] dark:!bg-[#13B5CF] !text-white dark:!text-[#0F172A]' : 'border-transparent text-[#4A5E78] dark:text-[#94A3B8] hover:text-[#0A2F5C] dark:hover:text-[#F1F5F9] hover:border-[#8DA0B9] dark:hover:border-[#64748B]'}`}
@@ -1036,21 +1003,21 @@ const AppContent: React.FC = () => {
                         {selectedCustomBarcodeType === 'isbn' && (
                           <div>
                             <div className="space-y-4 mb-6">
-                              <Input 
-                                label="ISBN (10 or 13 digits)" 
-                                id="customIsbn" 
-                                name="customIsbn" 
-                                value={rawIsbnInput} 
-                                onChange={handleRawIsbnChange} 
-                                placeholder="e.g., 978-3-16-148410-0" 
+                              <Input
+                                label="ISBN (10 or 13 digits)"
+                                id="customIsbn"
+                                name="customIsbn"
+                                value={rawIsbnInput}
+                                onChange={handleRawIsbnChange}
+                                placeholder="e.g., 978-3-16-148410-0"
                               />
-                              <Input 
-                                label="Price (USD) - Optional" 
-                                id="customPrice" 
-                                name="customPrice" 
-                                type="number" 
-                                value={rawPriceInput} 
-                                onChange={handleRawPriceChange} 
+                              <Input
+                                label="Price (USD) - Optional"
+                                id="customPrice"
+                                name="customPrice"
+                                type="number"
+                                value={rawPriceInput}
+                                onChange={handleRawPriceChange}
                                 placeholder="e.g., 24.95 (leave blank for NPI)"
                                 step="0.01"
                               />
@@ -1059,9 +1026,9 @@ const AppContent: React.FC = () => {
                             <div className="mt-6 pt-6 border-t border-[#DDE3ED] dark:border-[#334155]">
                               <div className="p-4 border border-[#A8B8D0] dark:border-[#334155] bg-[#F8FAFC] dark:bg-[#0F172A] rounded-md min-h-[150px] flex items-center justify-center mb-4">
                                 {combinedIsbnPricePreviewUrl ? (
-                                  <img 
-                                    src={combinedIsbnPricePreviewUrl} 
-                                    alt="ISBN/Price Barcode Preview" 
+                                  <img
+                                    src={combinedIsbnPricePreviewUrl}
+                                    alt="ISBN/Price Barcode Preview"
                                     className="max-w-full h-auto object-contain mx-auto"
                                   />
                                 ) : (rawIsbnInput.trim() || rawPriceInput.trim() ? (
@@ -1075,15 +1042,15 @@ const AppContent: React.FC = () => {
                                 ))}
                               </div>
                               <div className="mt-4 flex space-x-3 justify-center">
-                                <Button 
-                                  onClick={() => handleDownloadCustomBarcode('JPEG')} 
+                                <Button
+                                  onClick={() => handleDownloadCustomBarcode('JPEG')}
                                   disabled={!ean13Data || !!isbnBarcodeError || isIsbnBarcodeProcessing}
                                   variant="primary" size="sm"
                                 >
                                   {isIsbnBarcodeProcessing && currentProcessingFormat === 'BARCODE_JPEG' ? 'Processing...' : 'Download Barcode (JPEG)'}
                                 </Button>
-                                <Button 
-                                  onClick={() => handleDownloadCustomBarcode('PDF')} 
+                                <Button
+                                  onClick={() => handleDownloadCustomBarcode('PDF')}
                                   disabled={!ean13Data || !!isbnBarcodeError || isIsbnBarcodeProcessing}
                                   variant="secondary" size="sm"
                                 >
@@ -1125,15 +1092,15 @@ const AppContent: React.FC = () => {
                                 )}
                               </div>
                               <div className="mt-4 flex space-x-3 justify-center">
-                                <Button 
-                                  onClick={() => handleDownloadDataMatrixBarcode('JPEG')} 
+                                <Button
+                                  onClick={() => handleDownloadDataMatrixBarcode('JPEG')}
                                   disabled={!dataMatrixImageDataUrl || !!dataMatrixError || isDataMatrixProcessing}
                                   variant="primary" size="sm"
                                 >
                                   {isDataMatrixProcessing && currentProcessingFormat === 'DATAMATRIX_JPEG' ? 'Processing...' : 'Download Barcode (JPEG)'}
                                 </Button>
-                                <Button 
-                                  onClick={() => handleDownloadDataMatrixBarcode('PDF')} 
+                                <Button
+                                  onClick={() => handleDownloadDataMatrixBarcode('PDF')}
                                   disabled={!dataMatrixImageDataUrl || !!dataMatrixError || isDataMatrixProcessing}
                                   variant="secondary" size="sm"
                                 >
@@ -1147,7 +1114,6 @@ const AppContent: React.FC = () => {
                 )}
             </div>
 
-            {/* === BOOK SPECIFICATIONS & SUMMARY CARD (Collapsible) === */}
             <div className="bg-[#FFFFFF] dark:bg-[#1E293B] p-0 shadow-lg rounded-lg border border-[#DDE3ED] dark:border-[#334155]" aria-labelledby="book-spec-summary-heading">
                 <button
                     onClick={() => setShowBookSpecAndSummary(!showBookSpecAndSummary)}
@@ -1177,18 +1143,18 @@ const AppContent: React.FC = () => {
                             {currentBindingRequiresPageData && (
                             <>
                                 <Input label="Page Count (Total)" id="pageCount" type="number" name="pageCount" value={formData.pageCount} onChange={handleTemplateFormChange} placeholder="e.g., 200" required={currentBindingRequiresPageData} min="2"/>
-                                <Select 
-                                    label="Paper Stock (Interior)" 
-                                    id="paperStockPPI" 
-                                    name="paperStockPPI" 
-                                    value={formData.paperStockPPI} 
-                                    onChange={handleTemplateFormChange} 
-                                    options={paperStockOptionsForSelect} 
-                                    required={currentBindingRequiresPageData} 
+                                <Select
+                                    label="Paper Stock (Interior)"
+                                    id="paperStockPPI"
+                                    name="paperStockPPI"
+                                    value={formData.paperStockPPI}
+                                    onChange={handleTemplateFormChange}
+                                    options={paperStockOptionsForSelect}
+                                    required={currentBindingRequiresPageData}
                                 />
                             </>
                             )}
-                            
+
                             {!currentBindingRequiresPageData && formData.bindingType && (
                                 <p className="text-sm text-[#4A5E78] dark:text-[#94A3B8] p-3 bg-[#F8FAFC] dark:bg-[#0F172A] rounded-md">Page count and paper stock are not required for <span className="font-semibold">{formData.bindingType}</span> template generation.</p>
                             )}
@@ -1211,7 +1177,7 @@ const AppContent: React.FC = () => {
                                     {line.label} <strong className="font-semibold">{line.value}</strong>
                                     </p>
                                 ))}
-                                
+
                                 {showDownloadOptionsSet && (
                                     <div className="mt-4 pt-4 border-t border-[#A8B8D0] dark:border-[#475569] space-y-4">
                                         <h3 className="text-lg font-medium text-[#0A2F5C] dark:text-[#F1F5F9]">Download Your Files</h3>
@@ -1235,17 +1201,16 @@ const AppContent: React.FC = () => {
             </div>
         </div>
 
-        <section 
+        <section
           className="bg-[#FFFFFF] dark:bg-[#1E293B] p-6 shadow-lg rounded-lg border border-[#DDE3ED] dark:border-[#334155] lg:col-span-8"
           aria-labelledby="results-preview-heading"
         >
           <h2 id="results-preview-heading" className="text-2xl font-semibold text-[#0A2F5C] dark:text-[#F1F5F9] mb-6 border-b border-[#DDE3ED] dark:border-[#334155] pb-3">
             Previews & Setup Guides
           </h2>
-          
+
           {calculatedDimensions ? (
             <div className="space-y-6">
-              {/* Cover Preview Section */}
               <div className="border border-[#DDE3ED] dark:border-[#334155] rounded-lg">
                 <button
                   onClick={() => togglePreviewSection('cover')}
@@ -1260,11 +1225,10 @@ const AppContent: React.FC = () => {
                   <div id="cover-preview-content" className="p-4 bg-[#FFFFFF] dark:bg-[#1E293B] rounded-b-lg border-t border-[#DDE3ED] dark:border-[#334155]">
                      <div className="flex justify-end items-center mb-1">
                         <label htmlFor="showTechnicalGuidesToggle" className="flex items-center text-xs text-[#4A5E78] dark:text-[#94A3B8] cursor-pointer">
-                            <input 
-                                type="checkbox" 
+                            <input
+                                type="checkbox"
                                 id="showTechnicalGuidesToggle"
-                                name="showTechnicalGuidesToggle"
-                                checked={showTechnicalGuides} 
+                                checked={showTechnicalGuides}
                                 onChange={() => setShowTechnicalGuides(!showTechnicalGuides)}
                                 className="mr-1 h-3 w-3 rounded border-[#A8B8D0] dark:border-[#64748B] text-[#0A2F5C] dark:text-[#13B5CF] focus:ring-[#13B5CF] dark:focus:ring-offset-[#1E293B]"
                             />
@@ -1272,8 +1236,8 @@ const AppContent: React.FC = () => {
                         </label>
                       </div>
                     <div className="border border-[#DDE3ED] dark:border-[#334155] rounded p-2 bg-[#F8FAFC] dark:bg-[#0F172A] aspect-[1.414] md:aspect-[1.6] lg:aspect-[1.7] flex items-center justify-center">
-                        <TemplatePreview 
-                            calculations={calculatedDimensions} 
+                        <TemplatePreview
+                            calculations={calculatedDimensions}
                             showTechnicalGuides={showTechnicalGuides}
                         />
                     </div>
@@ -1284,19 +1248,19 @@ const AppContent: React.FC = () => {
                             {currentLegendItems.map(item => (
                                 <div key={item.label} className="flex items-center">
                                 {item.type === 'box' ? (
-                                    <span 
+                                    <span
                                         className="w-3 h-3 inline-block mr-1.5 border border-slate-400 dark:border-slate-600"
                                         style={{ backgroundColor: item.color }}
                                         aria-hidden="true"
                                     ></span>
-                                    ) : ( 
-                                    <span 
-                                        className="w-4 h-0.5 inline-block mr-1.5" 
-                                        style={{ 
-                                        backgroundColor: item.color, 
-                                        borderStyle: item.type === 'line-dashed' ? 'dashed' : 'solid', 
-                                        borderWidth: '2px', 
-                                        borderColor: item.color 
+                                    ) : (
+                                    <span
+                                        className="w-4 h-0.5 inline-block mr-1.5"
+                                        style={{
+                                        backgroundColor: item.color,
+                                        borderStyle: item.type === 'line-dashed' ? 'dashed' : 'solid',
+                                        borderWidth: '2px',
+                                        borderColor: item.color
                                         }}
                                         aria-hidden="true"
                                     ></span>
@@ -1311,7 +1275,6 @@ const AppContent: React.FC = () => {
                 )}
               </div>
 
-              {/* Interior Setup Guide Section */}
               <div className="border border-[#DDE3ED] dark:border-[#334155] rounded-lg">
                 <button
                     onClick={() => togglePreviewSection('interior')}
@@ -1324,8 +1287,8 @@ const AppContent: React.FC = () => {
                 </button>
                 {activePreviewSection === 'interior' && calculatedDimensions && (
                   <div id="interior-setup-content" className="p-0 bg-[#FFFFFF] dark:bg-[#1E293B] rounded-b-lg border-t border-[#DDE3ED] dark:border-[#334155]">
-                    <InteractiveInteriorSetup 
-                        pageCount={calculatedDimensions.pageCountNum} 
+                    <InteractiveInteriorSetup
+                        pageCount={calculatedDimensions.pageCountNum}
                         trimWidth={calculatedDimensions.trimWidthNum}
                         trimHeight={calculatedDimensions.trimHeightNum}
                     />
@@ -1342,15 +1305,11 @@ const AppContent: React.FC = () => {
       </div>
 
       <footer className="mt-auto pt-8 text-center text-xs text-[#4A5E78] dark:text-[#94A3B8]">
-        <p>&copy; {new Date().getFullYear()} Template Generator. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} Template Generator. All rights reserved.</p>
         <p className="mt-1">Important: Always confirm template dimensions with your printer before final production.</p>
       </footer>
     </div>
   );
-}; // End of AppContent component
-
-
-const App: React.FC = () => {
-  return <AppContent />;
 };
+
 export default App;
