@@ -759,22 +759,20 @@ const App: React.FC = () => {
         tempCanvas.height = PADDING * 2 + totalTextHeight + TEXT_IMAGE_GAP + maxImageHeight;
 
         ctx.font = TEXT_FONT;
-        ctx.fillStyle = effectiveTheme === 'dark' ? '#1E293B' : '#FFFFFF';
+        ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-        ctx.fillStyle = effectiveTheme === 'dark' ? '#F1F5F9' : '#0A2F5C';
+        ctx.fillStyle = '#000000';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         const isbnTextX = PADDING + isbnSectionWidth / 2;
         const textY = PADDING + totalTextHeight / 2;
         ctx.fillText(displayIsbnText, isbnTextX, textY);
-
-        if (effectiveTheme === 'dark') ctx.filter = 'invert(1)';
+        
         ctx.drawImage(ean13Image, PADDING + (isbnSectionWidth - ean13Image.naturalWidth) / 2, PADDING + totalTextHeight + TEXT_IMAGE_GAP);
         if (ean5ActuallyUsed) {
             ctx.drawImage(ean5Image, PADDING + isbnSectionWidth + SECTION_GAP + (priceSectionWidth - ean5Image.naturalWidth) / 2, PADDING + totalTextHeight + TEXT_IMAGE_GAP);
         }
-        if (effectiveTheme === 'dark') ctx.filter = 'none';
 
         const fileNameBase = `barcode-${ean13Data}`;
 
@@ -837,7 +835,7 @@ const App: React.FC = () => {
         tempCanvas.width = PADDING_DM * 2 + Math.max(dataMatrixImage.naturalWidth, textMetrics.width);
         tempCanvas.height = PADDING_DM * 2 + dataMatrixImage.naturalHeight + TEXT_IMAGE_GAP_DM + approxTextHeight;
 
-        ctx.fillStyle = effectiveTheme === 'dark' ? '#1E293B' : '#FFFFFF';
+        ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 
         ctx.textAlign = 'center';
@@ -845,17 +843,11 @@ const App: React.FC = () => {
 
         const imageX = (tempCanvas.width - dataMatrixImage.naturalWidth) / 2;
         const imageY = PADDING_DM;
-
-        if (effectiveTheme === 'dark') {
-            ctx.filter = 'invert(1)';
-        }
+        
         ctx.drawImage(dataMatrixImage, imageX, imageY);
-        if (effectiveTheme === 'dark') {
-            ctx.filter = 'none';
-        }
-
+        
         ctx.font = TEXT_FONT_DM;
-        ctx.fillStyle = effectiveTheme === 'dark' ? '#F1F5F9' : '#0A2F5C';
+        ctx.fillStyle = '#000000';
         const textX = tempCanvas.width / 2;
         const textY = imageY + dataMatrixImage.naturalHeight + TEXT_IMAGE_GAP_DM + approxTextHeight / 2;
         ctx.fillText(dataMatrixInput, textX, textY);
@@ -949,11 +941,13 @@ const App: React.FC = () => {
 
 
   return (
-    // --- V V V THIS IS THE CORRECTED LINE V V V ---
-    <div className="bg-slate-50 dark:bg-slate-900 container mx-auto p-4 md:p-6 lg:p-8 flex flex-col min-h-screen">
+    // --- V V V THIS IS THE CLEANED-UP LINE V V V ---
+    // The redundant background and text color classes have been removed from here.
+    // They are now correctly handled by the body tag in your index.css file.
+    <div className="container mx-auto p-4 md:p-6 lg:p-8 flex flex-col min-h-screen">
       <header className="mb-6 md:mb-8">
         <div className="flex justify-between items-center">
-        {/* The text color classes are removed from here because they are now inherited from the body */}
+          {/* Text colors are also removed from here, they will be inherited */}
           <div className="text-2xl md:text-3xl font-bold">Acutrack</div>
           <div className="flex items-center space-x-4">
             <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Template Generator</h1>
