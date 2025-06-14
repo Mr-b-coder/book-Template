@@ -254,6 +254,7 @@ const InteractiveInteriorSetup: React.FC<InteractiveInteriorSetupProps> = ({
                 <input 
                     type="checkbox" 
                     id="showInteriorPageGuidesToggle"
+                    name="showInteriorPageGuidesToggle" /* Added name attribute */
                     checked={showInteriorPageGuides} 
                     onChange={() => setShowInteriorPageGuides(!showInteriorPageGuides)}
                     className="mr-1 h-3 w-3 rounded border-[#A8B8D0] dark:border-[#64748B] text-[#0A2F5C] dark:text-[#13B5CF] focus:ring-[#13B5CF] dark:focus:ring-offset-[#1E293B]"

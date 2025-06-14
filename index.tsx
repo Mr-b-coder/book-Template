@@ -1,24 +1,27 @@
-
 import React from 'react';
-import { createRoot } from 'react-dom/client'; // Updated import
-import App from './App.tsx'; // Explicitly add .tsx extension
+import ReactDOM from 'react-dom/client';
 
-// Diagnostic log
-if (typeof App === 'undefined') {
-  console.error("Critical Error: App component failed to load. Check App.tsx and its imports for errors.");
-} else {
-  console.log("App component loaded successfully.");
-}
+// We will add your App component back later.
+// For now, let's just make sure the basics work.
+
+// Import the CSS file. It's in the same folder now.
+import './index.css'; 
+
+const App = () => {
+  return (
+    <div className="bg-gray-100 min-h-screen flex items-center justify-center">
+      <h1 className="text-4xl font-bold text-blue-600">
+        It works! Your React & Tailwind app is running.
+      </h1>
+    </div>
+  );
+};
 
 const rootElement = document.getElementById('root');
-if (!rootElement) {
-  throw new Error("Could not find root element to mount to");
+if (rootElement) {
+  ReactDOM.createRoot(rootElement).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
 }
-
-const root = createRoot(rootElement); 
-// Render the app
-root.render(
-  <React.StrictMode>
-    {typeof App !== 'undefined' ? <App /> : <div>App failed to load. Check console.</div>}
-  </React.StrictMode>
-);
