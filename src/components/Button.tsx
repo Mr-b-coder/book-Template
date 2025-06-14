@@ -14,6 +14,7 @@ const Button: React.FC<ButtonProps> = ({
   className,
   ...rest
 }) => {
+  // This line is already correct, no changes needed here.
   const baseStyles = "inline-flex items-center justify-center font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-slate-900 transition-all duration-150 ease-in-out disabled:cursor-not-allowed active:scale-[0.98]";
 
   const variantStyles = {
@@ -23,11 +24,10 @@ const Button: React.FC<ButtonProps> = ({
     link: 'bg-transparent hover:text-[#08254A] text-[#0A2F5C] underline focus:ring-[#0A2F5C] shadow-none hover:shadow-none disabled:text-[#8DA0B9] disabled:no-underline dark:text-[#13B5CF] dark:hover:text-[#0DD9F9] dark:focus:ring-[#13B5CF] dark:disabled:text-[#4A5E78]'
   };
 
-  // --- V V V THESE ARE THE LINES WE ARE CHANGING V V V ---
   const sizeStyles = {
-    sm: 'px-2.5 py-1.5 text-xs', // New "small" is extra-small
-    md: 'px-4 py-2 text-sm',     // New "medium" is the old small size
-    lg: 'px-6 py-3 text-base',   // New "large" is the old medium size
+    sm: 'px-2.5 py-1.5 text-xs',
+    md: 'px-4 py-2 text-sm',
+    lg: 'px-6 py-3 text-base',
   };
 
   const linkSizeStyles = {
@@ -35,7 +35,6 @@ const Button: React.FC<ButtonProps> = ({
     md: 'text-sm',
     lg: 'text-base',
   };
-  // --- ^ ^ ^ THESE ARE THE LINES WE ARE CHANGING ^ ^ ^ ---
 
   return (
     <button
@@ -43,7 +42,9 @@ const Button: React.FC<ButtonProps> = ({
       className={`${baseStyles} ${variantStyles[variant]} ${variant === 'link' ? linkSizeStyles[size] : sizeStyles[size]} ${className || ''}`}
       {...rest}
     >
-      {leftIcon && <span className="mr-2 -ml-1 h-4 w-4">{leftIcon}</span>}
+      {/* --- V V V THIS IS THE LINE WE ARE CHANGING V V V --- */}
+      {leftIcon && <span className="flex items-center mr-2 -ml-1 h-4 w-4">{leftIcon}</span>}
+      {/* --- ^ ^ ^ THIS IS THE LINE WE ARE CHANGING ^ ^ ^ --- */}
       {children}
     </button>
   );
