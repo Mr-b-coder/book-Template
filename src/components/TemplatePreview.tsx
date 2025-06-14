@@ -41,7 +41,6 @@ export const TemplatePreview = ({
   const isDarkMode = typeof window !== 'undefined' && document.documentElement.classList.contains('dark');
 
   const colors = {
-    // Semantic guide colors - RETAINED for print clarity
     trimColor: '#4A90E2', 
     spineFoldColor: '#9013FE', 
     safetyMarginColor: '#22C55E', 
@@ -49,13 +48,11 @@ export const TemplatePreview = ({
     hingeColor: '#F5A623', 
     boardEdgeColor: '#444444', 
     punchHoleColor: '#BBBBBB',
-
-    // Theme-aligned colors for text and UI elements
     backgroundColor: 'transparent', 
-    textColor: isDarkMode ? '#F1F5F9' : '#0A2F5C',      // textPrimary
-    labelColor: isDarkMode ? '#F1F5F9' : '#0A2F5C',     // textPrimary for general labels
-    infoLabelColor: isDarkMode ? '#94A3B8' : '#4A5E78', // textSecondary for info labels
-    barcodePlaceholderColor: isDarkMode ? '#64748B' : '#8DA0B9', // disabledText for placeholder
+    textColor: isDarkMode ? '#F1F5F9' : '#0A2F5C',
+    labelColor: isDarkMode ? '#F1F5F9' : '#0A2F5C',
+    infoLabelColor: isDarkMode ? '#94A3B8' : '#4A5E78',
+    barcodePlaceholderColor: isDarkMode ? '#64748B' : '#8DA0B9',
   };
   
   const tooltipTexts = {
@@ -288,6 +285,11 @@ export const TemplatePreview = ({
 
     const boardLabelX = boardStartX + INFO_FONT_SIZE * 0.5 + 6; 
 
+    // --- V V V THIS IS THE NEW LINE OF CODE V V V ---
+    // We only show the "Hinge" label if the hinge width is reasonably large
+    const showHingeLabel = hingeWidth > 0.1; 
+    // --- ^ ^ ^ THIS IS THE NEW LINE OF CODE ^ ^ ^ ---
+
     return (
       <>
         <rect x="0" y="0" width={svgEffectiveWidth} height={svgEffectiveHeight} fill={colors.backgroundColor} stroke={colors.bleedWrapEdgeColor} strokeWidth="1" />
@@ -298,9 +300,13 @@ export const TemplatePreview = ({
         <rect x={spinePanelRightEdgeX} y={boardStartY} width={hinge} height={panelH} stroke={colors.hingeColor} strokeWidth="0.5" fill={isDarkMode ? "rgba(245,166,35,0.15)" : "rgba(245,166,35,0.05)"} />
 
         <TextLabel label="Back Board" x={boardStartX + panelW / 2} y={boardStartY + panelH / 2} tooltip={tooltipTexts.board} fill={colors.textColor}/>
-        <TextLabel label="Hinge" x={hingeLabelXLeft} y={hingeLabelY} transform={`rotate(-90 ${hingeLabelXLeft},${hingeLabelY})`} tooltip={tooltipTexts.hinge} fill={colors.textColor}/>
+        
+        {/* --- V V V THESE LINES HAVE BEEN MODIFIED V V V --- */}
+        {showHingeLabel && <TextLabel label="Hinge" x={hingeLabelXLeft} y={hingeLabelY} transform={`rotate(-90 ${hingeLabelXLeft},${hingeLabelY})`} tooltip={tooltipTexts.hinge} fill={colors.textColor}/>}
         {spineW > 0 && <TextLabel label="Spine Board" x={leftHingeRightEdgeX + spineW / 2} y={boardStartY + panelH / 2} transform={`rotate(-90 ${leftHingeRightEdgeX + spineW / 2},${boardStartY + panelH / 2})`} tooltip={tooltipTexts.spineWidth} fill={colors.textColor}/>}
-        <TextLabel label="Hinge" x={hingeLabelXRight} y={hingeLabelY} transform={`rotate(-90 ${hingeLabelXRight},${hingeLabelY})`} tooltip={tooltipTexts.hinge} fill={colors.textColor}/>
+        {showHingeLabel && <TextLabel label="Hinge" x={hingeLabelXRight} y={hingeLabelY} transform={`rotate(-90 ${hingeLabelXRight},${hingeLabelY})`} tooltip={tooltipTexts.hinge} fill={colors.textColor}/>}
+        {/* --- ^ ^ ^ THESE LINES HAVE BEEN MODIFIED ^ ^ ^ --- */}
+
         <TextLabel label="Front Board" x={rightHingeRightEdgeX + panelW / 2} y={boardStartY + panelH / 2} tooltip={tooltipTexts.board} fill={colors.textColor}/>
 
         {barcodeArea}
