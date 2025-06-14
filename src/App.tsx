@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import JSZip from 'jszip';
 import { jsPDF } from 'jspdf';
 import bwipjs from 'bwip-js';
-import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
+//import { GoogleGenAI, GenerateContentResponse } from "@google/genai";//
 import {
   BookCoverFormData, CoverCalculations, BindingType,
 } from './types.ts';
@@ -28,7 +28,7 @@ import { generateWordDocBlob } from './components/WordGenerator.ts';
 import Input from './components/Input.tsx';
 import Select from './components/Select.tsx';
 import Button from './components/Button.tsx';
-import TextArea from './components/TextArea.tsx';
+//import TextArea from './components/TextArea.tsx';//
 import CheckIcon from './components/CheckIcon.tsx';
 import InteractiveInteriorSetup from './components/InteractiveInteriorSetup.tsx';
 import { TemplatePreview } from './components/TemplatePreview.tsx';
@@ -36,7 +36,7 @@ import { ClipboardIcon } from './components/ClipboardIcons.tsx';
 import ZipFileIcon from './components/ZipFileIcon.tsx';
 import ChevronIcon from './components/ChevronIcon.tsx';
 import BarcodeIcon from './components/BarcodeIcon.tsx';
-import { ThemeToggleButton, useTheme } from './components/ThemeSwitcher.tsx'; // Corrected Path & Import
+import { ThemeToggleButton, useTheme } from './components/ThemeSwitcher';
 
 // Helper function to calculate EAN-13 check digit
 const calculateEAN13CheckDigit = (isbnWithoutCheck: string): number => {

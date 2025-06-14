@@ -1,3 +1,18 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* In src/index.css */
+
+body {
+  font-size: 14px; /* This changes the default text size from 16px to 14px */
+  color: #1e293b; /* slate-800 */
+}
+body.dark {
+  color: #e2e8f0; /* slate-200 */
+}
+
+/* V V V ADD THIS NEW RULE V V V */
+::placeholder {
+  font-size: 12px; /* text-xs */
+  color: #94a3b8; /* slate-400 */
+}
+body.dark ::placeholder {
+  color: #64748b; /* slate-500 */
+}
