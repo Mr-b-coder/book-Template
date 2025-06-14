@@ -949,12 +949,14 @@ const App: React.FC = () => {
 
 
   return (
-    <div className="container mx-auto p-4 md:p-6 lg:p-8 flex flex-col min-h-screen text-[#0A2F5C] dark:text-[#F1F5F9]">
+    // --- V V V THIS IS THE CORRECTED LINE V V V ---
+    <div className="bg-slate-50 dark:bg-slate-900 container mx-auto p-4 md:p-6 lg:p-8 flex flex-col min-h-screen">
       <header className="mb-6 md:mb-8">
         <div className="flex justify-between items-center">
-          <div className="text-2xl md:text-3xl font-bold text-[#0A2F5C] dark:text-[#F1F5F9]">Acutrack</div>
+        {/* The text color classes are removed from here because they are now inherited from the body */}
+          <div className="text-2xl md:text-3xl font-bold">Acutrack</div>
           <div className="flex items-center space-x-4">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#0A2F5C] dark:text-[#F1F5F9]">Template Generator</h1>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Template Generator</h1>
              <ThemeToggleButton />
           </div>
         </div>
@@ -967,7 +969,7 @@ const App: React.FC = () => {
 
       <div className="grid lg:grid-cols-12 gap-8 items-start flex-grow">
         <div className="lg:col-span-4 space-y-8">
-            <div className="bg-[#FFFFFF] dark:bg-[#1E293B] p-0 shadow-lg rounded-lg border border-[#DDE3ED] dark:border-[#334155]" aria-labelledby="barcode-generator-heading">
+            <div className="bg-white dark:bg-[#1E293B] p-0 shadow-lg rounded-lg border border-[#DDE3ED] dark:border-[#334155]" aria-labelledby="barcode-generator-heading">
                 <button
                     onClick={() => setShowBarcodeGeneratorUI(!showBarcodeGeneratorUI)}
                     className="w-full p-4 bg-[#DDE3ED] dark:bg-[#334155] hover:bg-[#A8B8D0] dark:hover:bg-[#475569] rounded-t-lg flex justify-between items-center text-left"
@@ -976,26 +978,26 @@ const App: React.FC = () => {
                 >
                     <div className="flex items-center space-x-2">
                         <BarcodeIcon className="text-[#0A2F5C] dark:text-[#13B5CF]" />
-                        <h2 id="barcode-generator-heading" className="text-xl font-semibold text-[#0A2F5C] dark:text-[#F1F5F9]">
+                        <h2 id="barcode-generator-heading" className="text-xl font-semibold">
                             Generate Barcode Image
                         </h2>
                     </div>
-                    <ChevronIcon isOpen={showBarcodeGeneratorUI} className="text-[#0A2F5C] dark:text-[#F1F5F9]" />
+                    <ChevronIcon isOpen={showBarcodeGeneratorUI} />
                 </button>
                 {showBarcodeGeneratorUI && (
-                    <div id="barcode-generator-content" className="p-6 bg-[#FFFFFF] dark:bg-[#1E293B] rounded-b-lg border-t border-[#DDE3ED] dark:border-[#334155]">
+                    <div id="barcode-generator-content" className="p-6 bg-white dark:bg-[#1E293B] rounded-b-lg border-t border-[#DDE3ED] dark:border-[#334155]">
                         <div className="mb-6 flex space-x-1 border-b border-[#DDE3ED] dark:border-[#334155]">
                             <Button
                                 variant={selectedCustomBarcodeType === 'isbn' ? 'primary' : 'outline'}
                                 onClick={() => setSelectedCustomBarcodeType('isbn')}
-                                className={`flex-1 rounded-b-none py-2 px-3 text-sm sm:text-base ${selectedCustomBarcodeType === 'isbn' ? 'border-b-transparent -mb-px !bg-[#0A2F5C] dark:!bg-[#13B5CF] !text-white dark:!text-[#0F172A]' : 'border-transparent text-[#4A5E78] dark:text-[#94A3B8] hover:text-[#0A2F5C] dark:hover:text-[#F1F5F9] hover:border-[#8DA0B9] dark:hover:border-[#64748B]'}`}
+                                className={`flex-1 rounded-b-none py-2 px-3 text-sm sm:text-base ${selectedCustomBarcodeType === 'isbn' ? 'border-b-transparent -mb-px !bg-[#0A2F5C] dark:!bg-[#13B5CF] !text-white dark:!text-[#0F172A]' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600'}`}
                             >
                                 ISBN Barcode
                             </Button>
                             <Button
                                 variant={selectedCustomBarcodeType === 'datamatrix' ? 'primary' : 'outline'}
                                 onClick={() => setSelectedCustomBarcodeType('datamatrix')}
-                                className={`flex-1 rounded-b-none py-2 px-3 text-sm sm:text-base ${selectedCustomBarcodeType === 'datamatrix' ? 'border-b-transparent -mb-px !bg-[#0A2F5C] dark:!bg-[#13B5CF] !text-white dark:!text-[#0F172A]' : 'border-transparent text-[#4A5E78] dark:text-[#94A3B8] hover:text-[#0A2F5C] dark:hover:text-[#F1F5F9] hover:border-[#8DA0B9] dark:hover:border-[#64748B]'}`}
+                                className={`flex-1 rounded-b-none py-2 px-3 text-sm sm:text-base ${selectedCustomBarcodeType === 'datamatrix' ? 'border-b-transparent -mb-px !bg-[#0A2F5C] dark:!bg-[#13B5CF] !text-white dark:!text-[#0F172A]' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600'}`}
                             >
                                 Data Matrix
                             </Button>
@@ -1021,7 +1023,7 @@ const App: React.FC = () => {
                                 placeholder="e.g., 24.95 (leave blank for NPI)"
                                 step="0.01"
                               />
-                              {isbnBarcodeError && <p className="text-[#EF4444] dark:text-[#FCA5A5] text-sm mt-1">{isbnBarcodeError}</p>}
+                              {isbnBarcodeError && <p className="text-red-500 text-sm mt-1">{isbnBarcodeError}</p>}
                             </div>
                             <div className="mt-6 pt-6 border-t border-[#DDE3ED] dark:border-[#334155]">
                               <div className="p-4 border border-[#A8B8D0] dark:border-[#334155] bg-[#F8FAFC] dark:bg-[#0F172A] rounded-md min-h-[150px] flex items-center justify-center mb-4">
@@ -1032,11 +1034,11 @@ const App: React.FC = () => {
                                     className="max-w-full h-auto object-contain mx-auto"
                                   />
                                 ) : (rawIsbnInput.trim() || rawPriceInput.trim() ? (
-                                  <div className="text-[#8DA0B9] dark:text-[#64748B] text-sm text-center">
+                                  <div className="text-slate-500 text-sm text-center">
                                     {isbnBarcodeError ? isbnBarcodeError : 'Generating preview...'}
                                   </div>
                                 ) : (
-                                  <div className="text-[#8DA0B9] dark:text-[#64748B] text-sm text-center">
+                                  <div className="text-slate-500 text-sm text-center">
                                     Your ISBN barcode will appear here.
                                   </div>
                                 ))}
@@ -1071,21 +1073,21 @@ const App: React.FC = () => {
                                 onChange={handleDataMatrixInputChange}
                                 placeholder="e.g., INH27385"
                               />
-                              {dataMatrixError && <p className="text-[#EF4444] dark:text-[#FCA5A5] text-sm mt-1">{dataMatrixError}</p>}
+                              {dataMatrixError && <p className="text-red-500 text-sm mt-1">{dataMatrixError}</p>}
                             </div>
                             <div className="mt-6 pt-6 border-t border-[#DDE3ED] dark:border-[#334155]">
                               <div className="p-4 border border-[#A8B8D0] dark:border-[#334155] rounded-md bg-[#F8FAFC] dark:bg-[#0F172A] min-h-[150px] flex flex-col items-center justify-center mb-4 space-y-2">
                                 {dataMatrixImageDataUrl ? (
                                   <>
                                     <img src={dataMatrixImageDataUrl} alt="Data Matrix Barcode" className="max-w-[150px] max-h-[150px] object-contain"/>
-                                    <div className="text-xl mt-2 text-[#0A2F5C] dark:text-[#F1F5F9] font-monospace break-all text-center">{dataMatrixInput}</div>
+                                    <div className="text-xl mt-2 font-monospace break-all text-center">{dataMatrixInput}</div>
                                   </>
                                 ) : ( dataMatrixInput.trim() !== '' ? (
-                                    <div className="text-[#8DA0B9] dark:text-[#64748B] text-sm text-center">
+                                    <div className="text-slate-500 text-sm text-center">
                                       {dataMatrixError ? dataMatrixError : 'Generating preview...'}
                                     </div>
                                   ) : (
-                                    <div className="text-[#8DA0B9] dark:text-[#64748B] text-sm text-center">
+                                    <div className="text-slate-500 text-sm text-center">
                                       Your Data Matrix code will appear here.
                                     </div>
                                   )
@@ -1114,22 +1116,22 @@ const App: React.FC = () => {
                 )}
             </div>
 
-            <div className="bg-[#FFFFFF] dark:bg-[#1E293B] p-0 shadow-lg rounded-lg border border-[#DDE3ED] dark:border-[#334155]" aria-labelledby="book-spec-summary-heading">
+            <div className="bg-white dark:bg-[#1E293B] p-0 shadow-lg rounded-lg border border-[#DDE3ED] dark:border-[#334155]" aria-labelledby="book-spec-summary-heading">
                 <button
                     onClick={() => setShowBookSpecAndSummary(!showBookSpecAndSummary)}
                     className="w-full p-4 bg-[#F8FAFC] dark:bg-[#1E293B] hover:bg-[#DDE3ED] dark:hover:bg-[#334155] rounded-t-lg flex justify-between items-center text-left"
                     aria-expanded={showBookSpecAndSummary}
                     aria-controls="book-spec-summary-content"
                 >
-                    <h2 id="book-spec-summary-heading" className="text-xl font-semibold text-[#0A2F5C] dark:text-[#F1F5F9]">
+                    <h2 id="book-spec-summary-heading" className="text-xl font-semibold">
                         Book Specifications & Summary
                     </h2>
-                    <ChevronIcon isOpen={showBookSpecAndSummary} className="text-[#0A2F5C] dark:text-[#F1F5F9]" />
+                    <ChevronIcon isOpen={showBookSpecAndSummary} />
                 </button>
 
                 {showBookSpecAndSummary && (
-                    <div id="book-spec-summary-content" className="p-6 bg-[#FFFFFF] dark:bg-[#1E293B] rounded-b-lg border-t border-[#DDE3ED] dark:border-[#334155]">
-                        <h3 className="text-lg font-medium text-[#0A2F5C] dark:text-[#F1F5F9] mb-4 border-b border-[#DDE3ED] dark:border-[#334155] pb-2">
+                    <div id="book-spec-summary-content" className="p-6 bg-white dark:bg-[#1E293B] rounded-b-lg border-t border-[#DDE3ED] dark:border-[#334155]">
+                        <h3 className="text-lg font-medium mb-4 border-b border-[#DDE3ED] dark:border-[#334155] pb-2">
                            1. Book Specifications
                         </h3>
                         <form onSubmit={handleTemplateFormSubmit} className="space-y-5">
@@ -1156,22 +1158,22 @@ const App: React.FC = () => {
                             )}
 
                             {!currentBindingRequiresPageData && formData.bindingType && (
-                                <p className="text-sm text-[#4A5E78] dark:text-[#94A3B8] p-3 bg-[#F8FAFC] dark:bg-[#0F172A] rounded-md">Page count and paper stock are not required for <span className="font-semibold">{formData.bindingType}</span> template generation.</p>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-md">Page count and paper stock are not required for <span className="font-semibold">{formData.bindingType}</span> template generation.</p>
                             )}
 
                             <Button type="submit" variant="primary" className="w-full" disabled={isProcessing}>Calculate & View Options</Button>
-                            {error && <p className="text-[#EF4444] dark:text-[#FCA5A5] text-sm bg-[#FEF2F2] dark:bg-[#7F1D1D] p-3 rounded-md">{error}</p>}
+                            {error && <p className="text-red-500 text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-md">{error}</p>}
                         </form>
 
                         {calculatedDimensions && (
                             <div className="mt-8 pt-6 border-t border-[#DDE3ED] dark:border-[#334155]">
                                 <div className="flex justify-between items-center mb-2">
-                                    <h3 className="text-lg font-medium text-[#0A2F5C] dark:text-[#F1F5F9]">Book Summary:</h3>
-                                    <Button onClick={copySummaryToClipboard} variant="outline" size="sm" leftIcon={summaryCopied ? <CheckIcon className="w-4 h-4 text-[#22C55E] dark:text-[#86EFAC]"/> : <ClipboardIcon className="w-4 h-4"/>}>
+                                    <h3 className="text-lg font-medium">Book Summary:</h3>
+                                    <Button onClick={copySummaryToClipboard} variant="outline" size="sm" leftIcon={summaryCopied ? <CheckIcon className="w-4 h-4 text-green-500"/> : <ClipboardIcon className="w-4 h-4"/>}>
                                         {summaryCopied ? 'Copied!' : 'Copy'}
                                     </Button>
                                 </div>
-                                <div className="text-sm bg-[#F8FAFC] dark:bg-[#0F172A] p-4 rounded-md overflow-x-auto custom-scrollbar leading-normal text-[#0A2F5C] dark:text-[#F1F5F9]">
+                                <div className="text-sm bg-[#F8FAFC] dark:bg-[#0F172A] p-4 rounded-md overflow-x-auto custom-scrollbar leading-normal">
                                 {condensedSummaryLines.map((line, index) => (
                                     <p key={index} className="whitespace-pre-wrap">
                                     {line.label} <strong className="font-semibold">{line.value}</strong>
@@ -1179,10 +1181,10 @@ const App: React.FC = () => {
                                 ))}
 
                                 {showDownloadOptionsSet && (
-                                    <div className="mt-4 pt-4 border-t border-[#A8B8D0] dark:border-[#475569] space-y-4">
-                                        <h3 className="text-lg font-medium text-[#0A2F5C] dark:text-[#F1F5F9]">Download Your Files</h3>
+                                    <div className="mt-4 pt-4 border-t border-slate-300 dark:border-slate-700 space-y-4">
+                                        <h3 className="text-lg font-medium">Download Your Files</h3>
                                         {isProcessing && currentProcessingFormat && (
-                                            <div className="mb-4 p-3 bg-[#DDE3ED] dark:bg-[#334155] text-[#324E80] dark:text-[#94A3B8] rounded-md text-sm">
+                                            <div className="mb-4 p-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md text-sm">
                                                 Generating {currentProcessingFormat}... Please wait.
                                             </div>
                                         )}
@@ -1202,10 +1204,10 @@ const App: React.FC = () => {
         </div>
 
         <section
-          className="bg-[#FFFFFF] dark:bg-[#1E293B] p-6 shadow-lg rounded-lg border border-[#DDE3ED] dark:border-[#334155] lg:col-span-8"
+          className="bg-white dark:bg-[#1E293B] p-6 shadow-lg rounded-lg border border-[#DDE3ED] dark:border-[#334155] lg:col-span-8"
           aria-labelledby="results-preview-heading"
         >
-          <h2 id="results-preview-heading" className="text-2xl font-semibold text-[#0A2F5C] dark:text-[#F1F5F9] mb-6 border-b border-[#DDE3ED] dark:border-[#334155] pb-3">
+          <h2 id="results-preview-heading" className="text-2xl font-semibold mb-6 border-b border-[#DDE3ED] dark:border-[#334155] pb-3">
             Previews & Setup Guides
           </h2>
 
@@ -1214,23 +1216,23 @@ const App: React.FC = () => {
               <div className="border border-[#DDE3ED] dark:border-[#334155] rounded-lg">
                 <button
                   onClick={() => togglePreviewSection('cover')}
-                  className="w-full p-3 bg-[#F8FAFC] dark:bg-[#1E293B] hover:bg-[#DDE3ED] dark:hover:bg-[#334155] rounded-t-lg flex justify-between items-center text-left font-medium text-[#0A2F5C] dark:text-[#F1F5F9]"
+                  className="w-full p-3 bg-[#F8FAFC] dark:bg-[#1E293B] hover:bg-[#DDE3ED] dark:hover:bg-[#334155] rounded-t-lg flex justify-between items-center text-left font-medium"
                   aria-expanded={activePreviewSection === 'cover'}
                   aria-controls="cover-preview-content"
                 >
                   <span>Cover Template Preview:</span>
-                  <ChevronIcon isOpen={activePreviewSection === 'cover'} className="text-[#0A2F5C] dark:text-[#F1F5F9]" />
+                  <ChevronIcon isOpen={activePreviewSection === 'cover'} />
                 </button>
                 {activePreviewSection === 'cover' && (
-                  <div id="cover-preview-content" className="p-4 bg-[#FFFFFF] dark:bg-[#1E293B] rounded-b-lg border-t border-[#DDE3ED] dark:border-[#334155]">
+                  <div id="cover-preview-content" className="p-4 bg-white dark:bg-[#1E293B] rounded-b-lg border-t border-[#DDE3ED] dark:border-[#334155]">
                      <div className="flex justify-end items-center mb-1">
-                        <label htmlFor="showTechnicalGuidesToggle" className="flex items-center text-xs text-[#4A5E78] dark:text-[#94A3B8] cursor-pointer">
+                        <label htmlFor="showTechnicalGuidesToggle" className="flex items-center text-xs text-slate-500 dark:text-slate-400 cursor-pointer">
                             <input
                                 type="checkbox"
                                 id="showTechnicalGuidesToggle"
                                 checked={showTechnicalGuides}
                                 onChange={() => setShowTechnicalGuides(!showTechnicalGuides)}
-                                className="mr-1 h-3 w-3 rounded border-[#A8B8D0] dark:border-[#64748B] text-[#0A2F5C] dark:text-[#13B5CF] focus:ring-[#13B5CF] dark:focus:ring-offset-[#1E293B]"
+                                className="mr-1 h-3 w-3 rounded border-slate-300 dark:border-slate-600 text-blue-600 dark:text-cyan-400 focus:ring-blue-500 dark:focus:ring-cyan-500 dark:focus:ring-offset-slate-800"
                             />
                             Show Technical Guides
                         </label>
@@ -1243,7 +1245,7 @@ const App: React.FC = () => {
                     </div>
                     {calculatedDimensions && currentLegendItems.length > 0 && (
                        <div className="mt-3 text-sm">
-                         <h4 className="font-medium text-[#4A5E78] dark:text-[#94A3B8] mb-2">Legend:</h4>
+                         <h4 className="font-medium text-slate-600 dark:text-slate-400 mb-2">Legend:</h4>
                          <div className="flex flex-wrap justify-start items-center gap-x-4 gap-y-1">
                             {currentLegendItems.map(item => (
                                 <div key={item.label} className="flex items-center">
@@ -1265,7 +1267,7 @@ const App: React.FC = () => {
                                         aria-hidden="true"
                                     ></span>
                                     )}
-                                <span className="text-xs text-[#4A5E78] dark:text-[#94A3B8]">{item.label}</span>
+                                <span className="text-xs text-slate-500 dark:text-slate-400">{item.label}</span>
                                 </div>
                             ))}
                          </div>
@@ -1278,15 +1280,15 @@ const App: React.FC = () => {
               <div className="border border-[#DDE3ED] dark:border-[#334155] rounded-lg">
                 <button
                     onClick={() => togglePreviewSection('interior')}
-                    className="w-full p-3 bg-[#F8FAFC] dark:bg-[#1E293B] hover:bg-[#DDE3ED] dark:hover:bg-[#334155] rounded-t-lg flex justify-between items-center text-left font-medium text-[#0A2F5C] dark:text-[#F1F5F9]"
+                    className="w-full p-3 bg-[#F8FAFC] dark:bg-[#1E293B] hover:bg-[#DDE3ED] dark:hover:bg-[#334155] rounded-t-lg flex justify-between items-center text-left font-medium"
                     aria-expanded={activePreviewSection === 'interior'}
                     aria-controls="interior-setup-content"
                 >
                     <span>Interior Page Setup Guide</span>
-                    <ChevronIcon isOpen={activePreviewSection === 'interior'} className="text-[#0A2F5C] dark:text-[#F1F5F9]" />
+                    <ChevronIcon isOpen={activePreviewSection === 'interior'} />
                 </button>
                 {activePreviewSection === 'interior' && calculatedDimensions && (
-                  <div id="interior-setup-content" className="p-0 bg-[#FFFFFF] dark:bg-[#1E293B] rounded-b-lg border-t border-[#DDE3ED] dark:border-[#334155]">
+                  <div id="interior-setup-content" className="p-0 bg-white dark:bg-[#1E293B] rounded-b-lg border-t border-[#DDE3ED] dark:border-[#334155]">
                     <InteractiveInteriorSetup
                         pageCount={calculatedDimensions.pageCountNum}
                         trimWidth={calculatedDimensions.trimWidthNum}
@@ -1297,14 +1299,14 @@ const App: React.FC = () => {
               </div>
             </div>
           ) : (
-            <p className="text-center text-[#4A5E78] dark:text-[#94A3B8] py-10">
+            <p className="text-center text-slate-500 dark:text-slate-400 py-10">
               Complete the book specifications and click "Calculate & View Options" to see your previews and download links.
             </p>
           )}
         </section>
       </div>
 
-      <footer className="mt-auto pt-8 text-center text-xs text-[#4A5E78] dark:text-[#94A3B8]">
+      <footer className="mt-auto pt-8 text-center text-xs text-slate-500 dark:text-slate-400">
         <p>© {new Date().getFullYear()} Template Generator. All rights reserved.</p>
         <p className="mt-1">Important: Always confirm template dimensions with your printer before final production.</p>
       </footer>

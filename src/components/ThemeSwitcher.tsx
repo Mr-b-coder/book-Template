@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import Button from './Button'; 
 import MoonIcon from './MoonIcon'; 
 import SunIcon from './SunIcon';   
@@ -15,71 +15,51 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [themePreference, setThemePreferenceState] = useState<ThemePreference>(() => {
-    if (typeof window !== 'undefined') {
-      const savedThemePreference = localStorage.getItem('themePreference') as ThemePreference | null;
-      return savedThemePreference || 'system';
+// --- V V V THIS IS NOW THE DEFAULT EXPORT V V V ---
+export default function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [themePreference, setThemePreference] = useState<ThemePreference>(() => {
+    if (typeof window === 'undefined') {
+      return 'light';
     }
-    return 'system';
+    const savedTheme = localStorage.getItem('themePreference') as ThemePreference | null;
+    return savedTheme || 'light';
   });
 
-  const [effectiveTheme, setEffectiveTheme] = useState<Theme>(() => {
-    if (typeof window === 'undefined') return 'light'; // Default for non-browser env
-    
-    let initialPref: ThemePreference = 'system';
-    if (typeof window !== 'undefined') {
-        initialPref = (localStorage.getItem('themePreference') || 'system') as ThemePreference;
-    }
-
-    if (initialPref === 'system') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    return initialPref as Theme;
-  });
+  const [effectiveTheme, setEffectiveTheme] = useState<Theme>('light');
 
   useEffect(() => {
-    const applyEffectiveTheme = (currentPreference: ThemePreference) => {
-      let newActualTheme: Theme;
-      if (currentPreference === 'system') {
-        newActualTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      } else {
-        newActualTheme = currentPreference;
-      }
+    const root = document.documentElement;
+    let systemThemeMediaQuery: MediaQueryList | undefined;
 
-      setEffectiveTheme(newActualTheme);
-
-      if (newActualTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
+    const handleSystemThemeChange = (event: MediaQueryListEvent) => {
+      const newSystemTheme: Theme = event.matches ? 'dark' : 'light';
+      root.classList.toggle('dark', event.matches);
+      setEffectiveTheme(newSystemTheme);
     };
-
-    applyEffectiveTheme(themePreference);
     
-    if (typeof window !== 'undefined') {
-        localStorage.setItem('themePreference', themePreference);
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.removeEventListener('change', handleSystemThemeChange);
+
+    if (themePreference === 'system') {
+      systemThemeMediaQuery = mediaQuery;
+      const isSystemDark = systemThemeMediaQuery.matches;
+      root.classList.toggle('dark', isSystemDark);
+      setEffectiveTheme(isSystemDark ? 'dark' : 'light');
+      systemThemeMediaQuery.addEventListener('change', handleSystemThemeChange);
+    } else {
+      const isDark = themePreference === 'dark';
+      root.classList.toggle('dark', isDark);
+      setEffectiveTheme(themePreference);
     }
 
-    let mediaQuery: MediaQueryList | undefined;
-    const handleChange = () => applyEffectiveTheme('system'); 
+    localStorage.setItem('themePreference', themePreference);
 
-    if (themePreference === 'system' && typeof window !== 'undefined') {
-      mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      mediaQuery.addEventListener('change', handleChange);
-    }
-    
     return () => {
-        if (mediaQuery) {
-            mediaQuery.removeEventListener('change', handleChange);
-        }
+      if (systemThemeMediaQuery) {
+        systemThemeMediaQuery.removeEventListener('change', handleSystemThemeChange);
+      }
     };
   }, [themePreference]);
-
-  const setThemePreference = useCallback((preference: ThemePreference) => {
-    setThemePreferenceState(preference);
-  }, []);
 
   return (
     <ThemeContext.Provider value={{ themePreference, setThemePreference, effectiveTheme }}>
@@ -87,6 +67,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     </ThemeContext.Provider>
   );
 };
+// --- ^ ^ ^ THIS IS NOW THE DEFAULT EXPORT ^ ^ ^ ---
 
 export const useTheme = (): ThemeContextType => {
   const context = useContext(ThemeContext);
