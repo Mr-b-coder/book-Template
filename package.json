@@ -1,0 +1,26 @@
+{
+  "name": "book--template-generator",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "19.0.0-rc.0",
+    "react-dom": "19.0.0-rc.0",
+    "jszip": "3.10.1",
+    "jspdf": "2.5.1",
+    "bwip-js": "4.3.0",
+    "html2canvas": "1.4.1",
+    "docx": "8.5.0",
+    "@google/genai": "^1.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "typescript": "~5.7.2",
+    "vite": "^6.2.0"
+  }
+}
