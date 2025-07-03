@@ -811,7 +811,7 @@ const App: React.FC = () => {
                         {dataMatrixImageDataUrl ? (
                           <>
                             <img src={dataMatrixImageDataUrl} alt="Data Matrix Barcode" className="max-w-[150px] max-h-[150px] object-contain" />
-                            <div className="text-3xl mt-2 font-sans break-all text-center">{dataMatrixInput}</div>
+                            <div className="text-4xl mt-2 font-sans break-all text-center">{dataMatrixInput}</div>
                           </>
                         ) : (dataMatrixInput.trim() !== '' ? (
                           <div className="text-slate-500 text-sm text-center">
